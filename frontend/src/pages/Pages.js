@@ -11,7 +11,8 @@ import {
   Search,
   File,
   Globe,
-  Layout
+  Layout,
+  MoreHorizontal
 } from 'lucide-react';
 import { mockPages } from '../data/mock';
 
