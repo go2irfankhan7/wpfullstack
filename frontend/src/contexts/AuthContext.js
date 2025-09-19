@@ -1,5 +1,33 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { mockUsers } from '../data/mock';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
+// Set up axios interceptors
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('cms_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired, clear auth state
+      localStorage.removeItem('cms_token');
+      localStorage.removeItem('cms_user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 const AuthContext = createContext();
 
@@ -17,28 +45,71 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check for stored auth token
+    const storedToken = localStorage.getItem('cms_token');
     const storedUser = localStorage.getItem('cms_user');
-    if (storedUser) {
+    
+    if (storedToken && storedUser) {
       setUser(JSON.parse(storedUser));
+      // Verify token is still valid
+      verifyToken();
+    } else {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
-  const login = async (email, password) => {
-    // Mock login - replace with API call later
-    const foundUser = mockUsers.find(u => u.email === email && u.password === password);
-    if (foundUser) {
-      const { password: _, ...userWithoutPassword } = foundUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem('cms_user', JSON.stringify(userWithoutPassword));
-      return { success: true };
+  const verifyToken = async () => {
+    try {
+      const response = await axios.get(`${API}/auth/me`);
+      setUser(response.data);
+      localStorage.setItem('cms_user', JSON.stringify(response.data));
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      logout();
+    } finally {
+      setIsLoading(false);
     }
-    return { success: false, error: 'Invalid credentials' };
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('cms_user');
+  const login = async (email, password) => {
+    try {
+      setIsLoading(true);
+      const response = await axios.post(`${API}/auth/login`, {
+        email,
+        password
+      });
+      
+      const { access_token } = response.data;
+      localStorage.setItem('cms_token', access_token);
+      
+      // Get user info
+      const userResponse = await axios.get(`${API}/auth/me`);
+      const userData = userResponse.data;
+      
+      setUser(userData);
+      localStorage.setItem('cms_user', JSON.stringify(userData));
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Login error:', error);
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Login failed' 
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await axios.post(`${API}/auth/logout`);
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      localStorage.removeItem('cms_token');
+      localStorage.removeItem('cms_user');
+    }
   };
 
   const hasRole = (requiredRole) => {
