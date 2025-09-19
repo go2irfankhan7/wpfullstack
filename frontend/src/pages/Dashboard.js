@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlugins } from '../contexts/PluginContext';
 import AdminLayout from '../components/Layout/AdminLayout';
@@ -14,16 +14,67 @@ import {
   Eye,
   MessageSquare
 } from 'lucide-react';
-import { mockPosts, mockPages, mockUsers } from '../data/mock';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { plugins, activePlugins, executeHook } = usePlugins();
+  const [stats, setStats] = useState(null);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const stats = [
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setIsLoading(true);
+      const [statsResponse, activityResponse] = await Promise.all([
+        axios.get(`${API}/dashboard/stats`),
+        axios.get(`${API}/dashboard/activity?limit=5`)
+      ]);
+      
+      setStats(statsResponse.data);
+      setRecentActivity(activityResponse.data.activity_feed || []);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      // Fallback to basic stats
+      setStats({
+        total_posts: 0,
+        total_pages: 0,
+        total_users: 0,
+        active_plugins: activePlugins.length
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="space-y-6">
+          <div className="animate-pulse space-y-6">
+            <div className="h-32 bg-gray-200 rounded-lg"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  const statsCards = [
     {
       title: 'Total Posts',
-      value: mockPosts.length,
+      value: stats?.total_posts || 0,
       icon: FileText,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
@@ -31,7 +82,7 @@ const Dashboard = () => {
     },
     {
       title: 'Pages',
-      value: mockPages.length,
+      value: stats?.total_pages || 0,
       icon: File,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
@@ -39,7 +90,7 @@ const Dashboard = () => {
     },
     {
       title: 'Users',
-      value: mockUsers.length,
+      value: stats?.total_users || 0,
       icon: Users,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
@@ -47,37 +98,13 @@ const Dashboard = () => {
     },
     {
       title: 'Active Plugins',
-      value: activePlugins.length,
+      value: stats?.active_plugins || 0,
       icon: Puzzle,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
       change: `${activePlugins.length}/${plugins.length}`
     }
   ];
-
-  const recentActivity = [
-    {
-      type: 'post',
-      message: 'New post "Building with Plugins" was published',
-      time: '2 hours ago',
-      icon: FileText
-    },
-    {
-      type: 'plugin',
-      message: 'Contact Form 7 plugin was activated',
-      time: '4 hours ago',
-      icon: Puzzle
-    },
-    {
-      type: 'user',
-      message: 'New user registration: Author User',
-      time: '1 day ago',
-      icon: Users
-    }
-  ];
-
-  // Allow plugins to modify dashboard data
-  const dashboardData = executeHook('dashboard_stats', { stats, recentActivity });
 
   return (
     <AdminLayout>
@@ -94,7 +121,7 @@ const Dashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {(dashboardData.stats || stats).map((stat, index) => {
+          {statsCards.map((stat, index) => {
             const Icon = stat.icon;
             return (
               <Card key={index} className="hover:shadow-md transition-shadow">
@@ -135,20 +162,34 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {(dashboardData.recentActivity || recentActivity).map((activity, index) => {
-                  const Icon = activity.icon;
-                  return (
-                    <div key={index} className="flex items-start space-x-3">
-                      <div className="bg-gray-100 p-2 rounded-lg">
-                        <Icon className="w-4 h-4 text-gray-600" />
+                {recentActivity.length > 0 ? (
+                  recentActivity.map((activity, index) => {
+                    const iconName = activity.icon || 'Activity';
+                    const IconComponent = {
+                      FileText,
+                      File,
+                      Users,
+                      Puzzle,
+                      Activity
+                    }[iconName] || Activity;
+                    
+                    return (
+                      <div key={index} className="flex items-start space-x-3">
+                        <div className="bg-gray-100 p-2 rounded-lg">
+                          <IconComponent className="w-4 h-4 text-gray-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-900">{activity.title || activity.message}</p>
+                          <p className="text-xs text-gray-500">
+                            {activity.time || new Date(activity.timestamp).toRelativeTimeString?.() || 'Recently'}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900">{activity.message}</p>
-                        <p className="text-xs text-gray-500">{activity.time}</p>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                ) : (
+                  <p className="text-gray-500 text-sm">No recent activity</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -206,6 +247,9 @@ const Dashboard = () => {
                         src={plugin.icon} 
                         alt={plugin.name}
                         className="w-10 h-10 rounded"
+                        onError={(e) => {
+                          e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMCAzMEMxNS4wMyAzMCAxMS4wNTcgMjUuNTIgMTEuMDU3IDIwQzExLjA1NyAxNC40OCAxNS4wMyAxMCAyMCAxMEMyNC45NyAxMCAyOC45NDMgMTQuNDggMjguOTQzIDIwQzI4Ljk0MyAyNS41MiAyNC45NyAzMCAyMCAzMFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+                        }}
                       />
                       <div>
                         <h4 className="font-medium text-gray-900">{plugin.name}</h4>
