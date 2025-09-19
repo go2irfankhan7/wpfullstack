@@ -353,6 +353,102 @@ const Plugins = () => {
           </Card>
         )}
       </div>
+
+      {/* Upload Plugin Modal */}
+      <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Upload className="w-5 h-5" />
+              <span>Upload Plugin</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="text-sm text-gray-600">
+              <p className="mb-2">Upload a plugin ZIP file to install new functionality to your CMS.</p>
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <h4 className="font-medium text-blue-900 mb-1">Plugin Requirements:</h4>
+                <ul className="text-blue-800 text-xs space-y-1">
+                  <li>• Must be a valid ZIP file</li>
+                  <li>• Must contain plugin.json metadata file</li>
+                  <li>• Follow CMS Pro plugin structure</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* File Upload Area */}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+              <input
+                type="file"
+                accept=".zip"
+                onChange={handleFileSelect}
+                className="hidden"
+                id="plugin-upload"
+              />
+              <label htmlFor="plugin-upload" className="cursor-pointer">
+                <div className="space-y-2">
+                  <Upload className="w-8 h-8 text-gray-400 mx-auto" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      Click to upload or drag and drop
+                    </p>
+                    <p className="text-xs text-gray-500">ZIP files only</p>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            {/* Selected File Info */}
+            {uploadFile && (
+              <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-green-900">
+                      {uploadFile.name}
+                    </p>
+                    <p className="text-xs text-green-600">
+                      {(uploadFile.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-3 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsUploadModalOpen(false);
+                  setUploadFile(null);
+                }}
+                disabled={isUploading}
+              >
+                <X className="w-4 h-4 mr-2" />
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleInstallPlugin}
+                disabled={!uploadFile || isUploading}
+              >
+                {isUploading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Installing...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Install Plugin
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };
