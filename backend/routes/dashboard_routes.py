@@ -3,7 +3,7 @@ from typing import Dict, Any, List
 
 from models import DashboardStats, User, UserRole, ContentStatus, PluginStatus
 from auth import get_current_active_user
-from database import count_documents, find_documents
+from database import count_documents, find_documents, find_document
 from plugin_system import plugin_manager
 import logging
 
