@@ -160,12 +160,13 @@ async def update_document(
 ) -> bool:
     """Update a document"""
     collection = await get_collection(collection_name)
+    prepared_filter = prepare_filter_dict(filter_dict)
     
     # Add updated timestamp
     update_dict["updated_at"] = datetime.utcnow()
     
     result = await collection.update_one(
-        filter_dict,
+        prepared_filter,
         {"$set": update_dict},
         upsert=upsert
     )
