@@ -176,7 +176,8 @@ async def update_document(
 async def delete_document(collection_name: str, filter_dict: dict) -> bool:
     """Delete a document"""
     collection = await get_collection(collection_name)
-    result = await collection.delete_one(filter_dict)
+    prepared_filter = prepare_filter_dict(filter_dict)
+    result = await collection.delete_one(prepared_filter)
     return result.deleted_count > 0
 
 async def count_documents(collection_name: str, filter_dict: dict = None) -> int:
