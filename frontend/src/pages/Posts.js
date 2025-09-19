@@ -317,7 +317,7 @@ const Posts = () => {
             <h1 className="text-2xl font-bold text-gray-900">Posts</h1>
             <p className="text-gray-600">Manage your blog posts and articles</p>
           </div>
-          <Button className="flex items-center space-x-2">
+          <Button onClick={handleCreatePost} className="flex items-center space-x-2">
             <Plus className="w-4 h-4" />
             <span>New Post</span>
           </Button>
@@ -376,30 +376,35 @@ const Posts = () => {
                     </div>
                     
                     <p className="text-gray-600 mb-3 line-clamp-2">
-                      {post.excerpt}
+                      {post.excerpt || (post.content?.substring(0, 150) + '...')}
                     </p>
 
                     <div className="flex items-center space-x-6 text-sm text-gray-500">
-                      <span>By {post.author}</span>
-                      <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-                      <span>{post.category}</span>
-                      <div className="flex space-x-2">
-                        {post.tags.map(tag => (
-                          <span key={tag} className="bg-gray-100 px-2 py-1 rounded text-xs">
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
+                      <span>By {post.author || 'Unknown'}</span>
+                      <span>{new Date(post.created_at || post.createdAt).toLocaleDateString()}</span>
+                      {post.category && <span>{post.category}</span>}
+                      {post.tags && post.tags.length > 0 && (
+                        <div className="flex space-x-2">
+                          {post.tags.slice(0, 3).map(tag => (
+                            <span key={tag} className="bg-gray-100 px-2 py-1 rounded text-xs">
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Featured Image */}
-                  {post.featuredImage && (
+                  {post.featured_image && (
                     <div className="ml-4 flex-shrink-0">
                       <img
-                        src={post.featuredImage}
+                        src={post.featured_image}
                         alt={post.title}
                         className="w-24 h-16 object-cover rounded-lg"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
                       />
                     </div>
                   )}
@@ -408,7 +413,12 @@ const Posts = () => {
                 {/* Actions */}
                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
                   <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" className="flex items-center space-x-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center space-x-1"
+                      onClick={() => handleEditPost(post)}
+                    >
                       <Edit className="w-4 h-4" />
                       <span>Edit</span>
                     </Button>
@@ -450,13 +460,28 @@ const Posts = () => {
                   : 'Get started by creating your first post'
                 }
               </p>
-              <Button>
+              <Button onClick={handleCreatePost}>
                 <Plus className="w-4 h-4 mr-2" />
                 Create Post
               </Button>
             </CardContent>
           </Card>
         )}
+
+        {/* Create Post Modal */}
+        <PostModal 
+          isOpen={isCreateModalOpen} 
+          onClose={setIsCreateModalOpen}
+          title="Create New Post"
+        />
+
+        {/* Edit Post Modal */}
+        <PostModal 
+          isOpen={isEditModalOpen} 
+          onClose={setIsEditModalOpen}
+          title="Edit Post"
+          isEdit={true}
+        />
       </div>
     </AdminLayout>
   );
