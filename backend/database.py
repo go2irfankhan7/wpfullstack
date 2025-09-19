@@ -144,7 +144,8 @@ async def find_documents(
 async def find_document(collection_name: str, filter_dict: dict) -> Optional[dict]:
     """Find a single document"""
     collection = await get_collection(collection_name)
-    document = await collection.find_one(filter_dict)
+    prepared_filter = prepare_filter_dict(filter_dict)
+    document = await collection.find_one(prepared_filter)
     
     if document and "_id" in document:
         document["id"] = str(document["_id"])
