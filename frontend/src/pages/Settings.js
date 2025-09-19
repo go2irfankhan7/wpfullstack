@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '../components/Layout/AdminLayout';
 import { Card, CardHeader, CardContent, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -6,6 +6,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Switch } from '../components/ui/switch';
+import { useToast } from '../hooks/use-toast';
 import { 
   Settings as SettingsIcon,
   Globe,
@@ -17,6 +18,10 @@ import {
   Save,
   RotateCcw
 } from 'lucide-react';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const Settings = () => {
   const [settings, setSettings] = useState({
@@ -52,6 +57,29 @@ const Settings = () => {
     cdnEnabled: false,
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      setIsLoading(true);
+      // Since we don't have a settings endpoint yet, we'll use local storage
+      const savedSettings = localStorage.getItem('cms_settings');
+      if (savedSettings) {
+        setSettings(prev => ({ ...prev, ...JSON.parse(savedSettings) }));
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSettingChange = (key, value) => {
     setSettings(prev => ({
       ...prev,
@@ -59,14 +87,65 @@ const Settings = () => {
     }));
   };
 
-  const handleSave = () => {
-    // Save settings logic here
-    console.log('Saving settings:', settings);
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      
+      // For now, save to localStorage (can be replaced with API call later)
+      localStorage.setItem('cms_settings', JSON.stringify(settings));
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: "Success",
+        description: "Settings saved successfully"
+      });
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save settings",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleReset = () => {
-    // Reset to defaults logic here
-    console.log('Resetting settings');
+    if (window.confirm('Are you sure you want to reset all settings to defaults?')) {
+      setSettings({
+        siteName: 'CMS Pro',
+        siteDescription: 'A powerful plugin-based content management system',
+        siteUrl: 'https://example.com',
+        timezone: 'UTC',
+        dateFormat: 'YYYY-MM-DD',
+        timeFormat: '24h',
+        twoFactorAuth: false,
+        passwordExpiry: false,
+        sessionTimeout: 30,
+        loginAttempts: 5,
+        emailProvider: 'smtp',
+        smtpHost: '',
+        smtpPort: 587,
+        smtpUsername: '',
+        smtpPassword: '',
+        emailNotifications: true,
+        browserNotifications: false,
+        weeklyReports: true,
+        cacheEnabled: true,
+        compressionEnabled: true,
+        cdnEnabled: false,
+      });
+      
+      localStorage.removeItem('cms_settings');
+      
+      toast({
+        title: "Success",
+        description: "Settings reset to defaults"
+      });
+    }
   };
 
   const settingSections = [
