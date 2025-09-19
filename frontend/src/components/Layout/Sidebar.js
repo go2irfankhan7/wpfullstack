@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePlugins } from '../../contexts/PluginContext';
@@ -16,6 +16,7 @@ const Sidebar = () => {
   const location = useLocation();
   const { user, hasRole } = useAuth();
   const { executeHook } = usePlugins();
+  const [menuItems, setMenuItems] = useState([]);
 
   const defaultMenuItems = [
     {
@@ -56,8 +57,43 @@ const Sidebar = () => {
     }
   ];
 
-  // Allow plugins to add menu items
-  const menuItems = executeHook('admin_menu', defaultMenuItems);
+  useEffect(() => {
+    // Initialize with default menu items
+    setMenuItems(defaultMenuItems);
+    
+    // Allow plugins to modify menu items (but don't send React components)
+    const loadPluginMenuItems = async () => {
+      try {
+        // Only send serializable data to the backend
+        const menuData = defaultMenuItems.map(item => ({
+          title: item.title,
+          path: item.path,
+          roles: item.roles
+        }));
+        
+        const result = await executeHook('admin_menu', menuData);
+        
+        // If result is valid, merge with default items
+        if (Array.isArray(result)) {
+          // Map back to include icons
+          const enhancedItems = result.map(item => {
+            const defaultItem = defaultMenuItems.find(d => d.path === item.path);
+            return {
+              ...item,
+              icon: defaultItem?.icon || Settings
+            };
+          });
+          setMenuItems(enhancedItems);
+        }
+      } catch (error) {
+        console.error('Error loading plugin menu items:', error);
+        // Fallback to default menu items
+        setMenuItems(defaultMenuItems);
+      }
+    };
+    
+    loadPluginMenuItems();
+  }, [executeHook]);
 
   const isActive = (path) => {
     return location.pathname === path;
