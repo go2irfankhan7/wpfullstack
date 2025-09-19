@@ -616,6 +616,13 @@ const Posts = () => {
           title="Edit Post"
           isEdit={true}
         />
+
+        {/* View Post Modal */}
+        <ViewPostModal 
+          isOpen={isViewModalOpen} 
+          onClose={setIsViewModalOpen}
+          post={viewPost}
+        />
       </div>
     </AdminLayout>
   );
