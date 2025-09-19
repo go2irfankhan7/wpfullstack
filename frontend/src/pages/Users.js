@@ -317,7 +317,7 @@ const Users = () => {
             <h1 className="text-2xl font-bold text-gray-900">Users</h1>
             <p className="text-gray-600">Manage user accounts and permissions</p>
           </div>
-          <Button className="flex items-center space-x-2">
+          <Button onClick={handleCreateUser} className="flex items-center space-x-2">
             <UserPlus className="w-4 h-4" />
             <span>Add User</span>
           </Button>
@@ -330,7 +330,7 @@ const Users = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Users</p>
-                  <p className="text-3xl font-bold text-gray-900">{userStats.total}</p>
+                  <p className="text-3xl font-bold text-gray-900">{userStats.total || 0}</p>
                 </div>
                 <div className="bg-blue-50 p-3 rounded-lg">
                   <UsersIcon className="w-6 h-6 text-blue-600" />
@@ -343,7 +343,7 @@ const Users = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Admins</p>
-                  <p className="text-3xl font-bold text-red-600">{userStats.admin}</p>
+                  <p className="text-3xl font-bold text-red-600">{userStats.admin || 0}</p>
                 </div>
                 <div className="bg-red-50 p-3 rounded-lg">
                   <Shield className="w-6 h-6 text-red-600" />
@@ -356,7 +356,7 @@ const Users = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Editors</p>
-                  <p className="text-3xl font-bold text-blue-600">{userStats.editor}</p>
+                  <p className="text-3xl font-bold text-blue-600">{userStats.editor || 0}</p>
                 </div>
                 <div className="bg-blue-50 p-3 rounded-lg">
                   <Edit className="w-6 h-6 text-blue-600" />
@@ -369,7 +369,7 @@ const Users = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Authors</p>
-                  <p className="text-3xl font-bold text-green-600">{userStats.author}</p>
+                  <p className="text-3xl font-bold text-green-600">{userStats.author || 0}</p>
                 </div>
                 <div className="bg-green-50 p-3 rounded-lg">
                   <Edit className="w-6 h-6 text-green-600" />
@@ -426,9 +426,12 @@ const Users = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <img
-                        src={user.avatar}
+                        src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`}
                         alt={user.name}
                         className="w-12 h-12 rounded-full"
+                        onError={(e) => {
+                          e.target.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`;
+                        }}
                       />
                       
                       <div className="flex-1">
@@ -449,14 +452,18 @@ const Users = () => {
                           </div>
                           <div className="flex items-center space-x-1">
                             <Calendar className="w-4 h-4" />
-                            <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>
+                            <span>Joined {new Date(user.created_at || user.createdAt).toLocaleDateString()}</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEditUser(user)}
+                      >
                         <Edit className="w-4 h-4 mr-1" />
                         Edit
                       </Button>
@@ -492,13 +499,28 @@ const Users = () => {
                   : 'Get started by adding your first user'
                 }
               </p>
-              <Button>
+              <Button onClick={handleCreateUser}>
                 <UserPlus className="w-4 h-4 mr-2" />
                 Add User
               </Button>
             </CardContent>
           </Card>
         )}
+
+        {/* Create User Modal */}
+        <UserModal 
+          isOpen={isCreateModalOpen} 
+          onClose={setIsCreateModalOpen}
+          title="Add New User"
+        />
+
+        {/* Edit User Modal */}
+        <UserModal 
+          isOpen={isEditModalOpen} 
+          onClose={setIsEditModalOpen}
+          title="Edit User"
+          isEdit={true}
+        />
       </div>
     </AdminLayout>
   );
