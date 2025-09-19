@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlugins } from '../contexts/PluginContext';
+import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../components/Layout/AdminLayout';
 import { Card, CardHeader, CardContent, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
