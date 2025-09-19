@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '../components/Layout/AdminLayout';
 import { Card, CardHeader, CardContent, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Textarea } from '../components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { useToast } from '../hooks/use-toast';
 import { 
   Plus, 
   Edit, 
@@ -10,18 +15,59 @@ import {
   Eye,
   Search,
   Filter,
-  MoreHorizontal
+  MoreHorizontal,
+  Save,
+  X,
+  FileText
 } from 'lucide-react';
-import { mockPosts } from '../data/mock';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const Posts = () => {
-  const [posts, setPosts] = useState(mockPosts);
+  const [posts, setPosts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+    excerpt: '',
+    status: 'draft',
+    category: '',
+    tags: '',
+    featured_image: ''
+  });
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadPosts();
+  }, []);
+
+  const loadPosts = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(`${API}/posts`);
+      setPosts(response.data);
+    } catch (error) {
+      console.error('Error loading posts:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load posts",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.content.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = post.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         post.content?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || post.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -35,9 +81,232 @@ const Posts = () => {
     }
   };
 
-  const handleDeletePost = (postId) => {
-    setPosts(prev => prev.filter(p => p.id !== postId));
+  const handleCreatePost = () => {
+    setFormData({
+      title: '',
+      content: '',
+      excerpt: '',
+      status: 'draft',
+      category: '',
+      tags: '',
+      featured_image: ''
+    });
+    setIsCreateModalOpen(true);
   };
+
+  const handleEditPost = (post) => {
+    setSelectedPost(post);
+    setFormData({
+      title: post.title || '',
+      content: post.content || '',
+      excerpt: post.excerpt || '',
+      status: post.status || 'draft',
+      category: post.category || '',
+      tags: Array.isArray(post.tags) ? post.tags.join(', ') : '',
+      featured_image: post.featured_image || ''
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSavePost = async () => {
+    try {
+      if (!formData.title.trim() || !formData.content.trim()) {
+        toast({
+          title: "Error",
+          description: "Please fill in title and content",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const postData = {
+        ...formData,
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+      };
+
+      if (selectedPost) {
+        // Update existing post
+        await axios.put(`${API}/posts/${selectedPost.id}`, postData);
+        toast({
+          title: "Success",
+          description: "Post updated successfully"
+        });
+        setIsEditModalOpen(false);
+      } else {
+        // Create new post
+        await axios.post(`${API}/posts`, postData);
+        toast({
+          title: "Success",
+          description: "Post created successfully"
+        });
+        setIsCreateModalOpen(false);
+      }
+      
+      loadPosts(); // Reload posts
+      setSelectedPost(null);
+    } catch (error) {
+      console.error('Error saving post:', error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to save post",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeletePost = async (postId) => {
+    if (window.confirm('Are you sure you want to delete this post?')) {
+      try {
+        await axios.delete(`${API}/posts/${postId}`);
+        toast({
+          title: "Success",
+          description: "Post deleted successfully"
+        });
+        loadPosts();
+      } catch (error) {
+        console.error('Error deleting post:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete post",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="space-y-6">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+            <div className="h-12 bg-gray-200 rounded"></div>
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-48 bg-gray-200 rounded-lg"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  const PostModal = ({ isOpen, onClose, title, isEdit = false }) => (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                name="title"
+                value={formData.title}
+                onChange={handleFormChange}
+                placeholder="Post title"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleFormChange}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="private">Private</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="content">Content *</Label>
+            <Textarea
+              id="content"
+              name="content"
+              value={formData.content}
+              onChange={handleFormChange}
+              placeholder="Write your post content here..."
+              className="min-h-[300px]"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="excerpt">Excerpt</Label>
+            <Textarea
+              id="excerpt"
+              name="excerpt"
+              value={formData.excerpt}
+              onChange={handleFormChange}
+              placeholder="Brief description of the post..."
+              className="min-h-[80px]"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Input
+                id="category"
+                name="category"
+                value={formData.category}
+                onChange={handleFormChange}
+                placeholder="Post category"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tags">Tags</Label>
+              <Input
+                id="tags"
+                name="tags"
+                value={formData.tags}
+                onChange={handleFormChange}
+                placeholder="Tag1, Tag2, Tag3"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="featured_image">Featured Image URL</Label>
+            <Input
+              id="featured_image"
+              name="featured_image"
+              value={formData.featured_image}
+              onChange={handleFormChange}
+              placeholder="https://example.com/image.jpg"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <Button variant="outline" onClick={() => onClose(false)}>
+              <X className="w-4 h-4 mr-2" />
+              Cancel
+            </Button>
+            <Button onClick={handleSavePost}>
+              <Save className="w-4 h-4 mr-2" />
+              {isEdit ? 'Update Post' : 'Create Post'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 
   return (
     <AdminLayout>
