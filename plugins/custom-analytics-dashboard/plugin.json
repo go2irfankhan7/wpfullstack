@@ -1,0 +1,52 @@
+{
+  "name": "Custom Analytics Dashboard",
+  "version": "1.0.0",
+  "description": "Advanced analytics dashboard with custom metrics, visitor tracking, and detailed reporting for your CMS Pro website.",
+  "author": "Your Name",
+  "category": "Analytics",
+  "price": "Free",
+  "features": [
+    "Real-time visitor tracking",
+    "Custom dashboard widgets",
+    "Traffic analytics",
+    "Performance metrics",
+    "Export reports"
+  ],
+  "dependencies": [],
+  "hooks": {
+    "dashboard_stats": {
+      "type": "both",
+      "description": "Add custom analytics widgets to dashboard"
+    },
+    "admin_menu": {
+      "type": "frontend",
+      "description": "Add Analytics menu item to sidebar"
+    },
+    "analytics_endpoint": {
+      "type": "backend", 
+      "description": "Custom analytics API endpoints"
+    }
+  },
+  "settings_schema": {
+    "tracking_enabled": {
+      "type": "boolean",
+      "default": true,
+      "label": "Enable Visitor Tracking"
+    },
+    "analytics_period": {
+      "type": "select",
+      "options": ["7days", "30days", "90days"],
+      "default": "30days",
+      "label": "Default Analytics Period"
+    },
+    "api_key": {
+      "type": "string",
+      "default": "",
+      "label": "Analytics API Key"
+    }
+  },
+  "icon": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=100&h=100&fit=crop",
+  "screenshots": [
+    "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop"
+  ]
+}
