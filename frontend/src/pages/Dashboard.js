@@ -203,22 +203,34 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
-                <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                <button 
+                  onClick={() => navigate('/admin/posts')}
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                >
                   <FileText className="w-8 h-8 text-blue-600 mb-2" />
                   <h3 className="font-medium text-gray-900">New Post</h3>
                   <p className="text-sm text-gray-500">Create a new blog post</p>
                 </button>
-                <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                <button 
+                  onClick={() => navigate('/admin/pages')}
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                >
                   <File className="w-8 h-8 text-green-600 mb-2" />
                   <h3 className="font-medium text-gray-900">New Page</h3>
                   <p className="text-sm text-gray-500">Add a new page</p>
                 </button>
-                <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                <button 
+                  onClick={() => navigate('/admin/plugins')}
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                >
                   <Puzzle className="w-8 h-8 text-purple-600 mb-2" />
                   <h3 className="font-medium text-gray-900">Browse Plugins</h3>
                   <p className="text-sm text-gray-500">Extend functionality</p>
                 </button>
-                <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                <button 
+                  onClick={() => navigate('/admin/users')}
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                >
                   <Users className="w-8 h-8 text-orange-600 mb-2" />
                   <h3 className="font-medium text-gray-900">Manage Users</h3>
                   <p className="text-sm text-gray-500">User roles & permissions</p>
