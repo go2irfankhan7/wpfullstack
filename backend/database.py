@@ -7,6 +7,23 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def convert_id_for_query(id_value: str) -> Any:
+    """Convert string ID to ObjectId if it's a valid ObjectId format"""
+    if ObjectId.is_valid(id_value):
+        return ObjectId(id_value)
+    return id_value
+
+def prepare_filter_dict(filter_dict: dict) -> dict:
+    """Prepare filter dictionary by converting _id fields to ObjectId if needed"""
+    if not filter_dict:
+        return {}
+    
+    prepared_dict = filter_dict.copy()
+    if "_id" in prepared_dict:
+        prepared_dict["_id"] = convert_id_for_query(prepared_dict["_id"])
+    
+    return prepared_dict
+
 class Database:
     client: Optional[AsyncIOMotorClient] = None
     database = None
