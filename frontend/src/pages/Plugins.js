@@ -26,10 +26,14 @@ import {
 } from 'lucide-react';
 
 const Plugins = () => {
-  const { plugins, activePlugins, activatePlugin, deactivatePlugin, isPluginActive } = usePlugins();
+  const { plugins, activePlugins, activatePlugin, deactivatePlugin, isPluginActive, installPlugin } = usePlugins();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showInstalled, setShowInstalled] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
 
   const filteredPlugins = plugins.filter(plugin => {
     const matchesSearch = plugin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
