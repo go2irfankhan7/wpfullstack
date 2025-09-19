@@ -33,6 +33,7 @@ const Posts = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
   const [viewPost, setViewPost] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
