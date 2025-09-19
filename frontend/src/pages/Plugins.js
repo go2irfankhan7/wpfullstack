@@ -132,7 +132,7 @@ const Plugins = () => {
             <p className="text-gray-600">Extend your CMS with powerful plugins</p>
           </div>
           <div className="flex space-x-3">
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleUploadPlugin}>
               <Package className="w-4 h-4 mr-2" />
               Upload Plugin
             </Button>
