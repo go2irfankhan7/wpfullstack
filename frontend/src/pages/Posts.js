@@ -429,7 +429,12 @@ const Posts = () => {
                       <Edit className="w-4 h-4" />
                       <span>Edit</span>
                     </Button>
-                    <Button variant="outline" size="sm" className="flex items-center space-x-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center space-x-1"
+                      onClick={() => handleViewPost(post)}
+                    >
                       <Eye className="w-4 h-4" />
                       <span>View</span>
                     </Button>
