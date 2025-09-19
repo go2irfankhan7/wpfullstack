@@ -4,6 +4,8 @@ import { usePlugins } from '../contexts/PluginContext';
 import { Card, CardHeader, CardContent, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { useToast } from '../hooks/use-toast';
 import { 
   Puzzle,
   Download,
@@ -16,7 +18,11 @@ import {
   Zap,
   Shield,
   Eye,
-  ExternalLink
+  ExternalLink,
+  Upload,
+  X,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 
 const Plugins = () => {
