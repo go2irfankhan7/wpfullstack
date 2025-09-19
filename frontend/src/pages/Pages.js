@@ -291,24 +291,6 @@ const Pages = () => {
     </Dialog>
   );
 
-  const filteredPages = pages.filter(page => {
-    return page.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           page.content.toLowerCase().includes(searchTerm.toLowerCase());
-  });
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'published': return 'bg-green-100 text-green-800';
-      case 'draft': return 'bg-yellow-100 text-yellow-800';
-      case 'private': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const handleDeletePage = (pageId) => {
-    setPages(prev => prev.filter(p => p.id !== pageId));
-  };
-
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -318,7 +300,7 @@ const Pages = () => {
             <h1 className="text-2xl font-bold text-gray-900">Pages</h1>
             <p className="text-gray-600">Manage static pages and content</p>
           </div>
-          <Button className="flex items-center space-x-2">
+          <Button onClick={handleCreatePage} className="flex items-center space-x-2">
             <Plus className="w-4 h-4" />
             <span>New Page</span>
           </Button>
@@ -386,7 +368,12 @@ const Pages = () => {
 
                 {/* Actions */}
                 <div className="flex space-x-2 pt-4 border-t border-gray-200">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => handleEditPage(page)}
+                  >
                     <Edit className="w-4 h-4 mr-1" />
                     Edit
                   </Button>
@@ -406,24 +393,27 @@ const Pages = () => {
               </CardContent>
             </Card>
           ))}
-        </div>
 
-        {/* Add New Page Card */}
-        <Card className="border-dashed border-2 border-gray-300 hover:border-blue-400 transition-colors cursor-pointer">
-          <CardContent className="p-12 text-center">
-            <div className="text-gray-400 mb-4">
-              <Plus className="w-12 h-12 mx-auto" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Create New Page</h3>
-            <p className="text-gray-500 mb-4">
-              Add a new static page to your website
-            </p>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              New Page
-            </Button>
-          </CardContent>
-        </Card>
+          {/* Add New Page Card */}
+          <Card 
+            className="border-dashed border-2 border-gray-300 hover:border-blue-400 transition-colors cursor-pointer"
+            onClick={handleCreatePage}
+          >
+            <CardContent className="p-12 text-center">
+              <div className="text-gray-400 mb-4">
+                <Plus className="w-12 h-12 mx-auto" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Create New Page</h3>
+              <p className="text-gray-500 mb-4">
+                Add a new static page to your website
+              </p>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                New Page
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
 
         {filteredPages.length === 0 && searchTerm && (
           <Card>
@@ -438,6 +428,21 @@ const Pages = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Create Page Modal */}
+        <PageModal 
+          isOpen={isCreateModalOpen} 
+          onClose={setIsCreateModalOpen}
+          title="Create New Page"
+        />
+
+        {/* Edit Page Modal */}
+        <PageModal 
+          isOpen={isEditModalOpen} 
+          onClose={setIsEditModalOpen}
+          title="Edit Page"
+          isEdit={true}
+        />
       </div>
     </AdminLayout>
   );
