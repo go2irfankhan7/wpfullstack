@@ -315,6 +315,128 @@ const Posts = () => {
     </Dialog>
   );
 
+  const ViewPostModal = ({ isOpen, onClose, post }) => (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center space-x-2">
+            <Eye className="w-5 h-5" />
+            <span>View Post</span>
+          </DialogTitle>
+        </DialogHeader>
+        
+        {post && (
+          <div className="space-y-6">
+            {/* Post Header */}
+            <div className="border-b pb-4">
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">{post.title}</h1>
+              <div className="flex items-center space-x-4 text-sm text-gray-500">
+                <div className="flex items-center space-x-1">
+                  <Badge className={getStatusColor(post.status)}>
+                    {post.status}
+                  </Badge>
+                </div>
+                <span>By {post.author || 'Unknown'}</span>
+                <span>{new Date(post.created_at || post.createdAt).toLocaleDateString()}</span>
+                {post.category && <span>in {post.category}</span>}
+              </div>
+            </div>
+
+            {/* Featured Image */}
+            {post.featured_image && (
+              <div className="text-center">
+                <img
+                  src={post.featured_image}
+                  alt={post.title}
+                  className="max-w-full h-auto rounded-lg shadow-md mx-auto"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Excerpt */}
+            {post.excerpt && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-medium text-gray-900 mb-2">Excerpt</h3>
+                <p className="text-gray-700 italic">{post.excerpt}</p>
+              </div>
+            )}
+
+            {/* Content */}
+            <div>
+              <h3 className="font-medium text-gray-900 mb-3">Content</h3>
+              <div className="prose max-w-none bg-white p-6 rounded-lg border">
+                <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                  {post.content}
+                </div>
+              </div>
+            </div>
+
+            {/* Tags */}
+            {post.tags && post.tags.length > 0 && (
+              <div>
+                <h3 className="font-medium text-gray-900 mb-2">Tags</h3>
+                <div className="flex flex-wrap gap-2">
+                  {post.tags.map(tag => (
+                    <span 
+                      key={tag} 
+                      className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Post Meta */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-medium text-gray-900 mb-3">Post Information</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-medium">Created:</span> {new Date(post.created_at || post.createdAt).toLocaleString()}
+                </div>
+                <div>
+                  <span className="font-medium">Updated:</span> {new Date(post.updated_at || post.updatedAt).toLocaleString()}
+                </div>
+                <div>
+                  <span className="font-medium">Author:</span> {post.author || 'Unknown'}
+                </div>
+                <div>
+                  <span className="font-medium">Status:</span> 
+                  <Badge className={`ml-2 ${getStatusColor(post.status)}`}>
+                    {post.status}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-between pt-4 border-t">
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    onClose(false);
+                    handleEditPost(post);
+                  }}
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Post
+                </Button>
+              </div>
+              <Button variant="outline" onClick={() => onClose(false)}>
+                <X className="w-4 h-4 mr-2" />
+                Close
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
     <AdminLayout>
       <div className="space-y-6">
