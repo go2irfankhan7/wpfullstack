@@ -45,9 +45,14 @@ class PluginManager:
                 with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                     zip_ref.extractall(temp_path)
                 
-                # Validate plugin structure
-                plugin_json_path = temp_path / "plugin.json"
-                if not plugin_json_path.exists():
+                # Find plugin.json file (could be in root or subfolder)
+                plugin_json_path = None
+                for root, dirs, files in os.walk(temp_path):
+                    if 'plugin.json' in files:
+                        plugin_json_path = Path(root) / 'plugin.json'
+                        break
+                
+                if not plugin_json_path:
                     raise ValueError("Plugin must contain plugin.json file")
                 
                 # Load plugin metadata
@@ -71,14 +76,14 @@ class PluginManager:
                 
                 plugin_dir.mkdir(exist_ok=True)
                 
-                # Copy plugin files
+                # Copy plugin files from the folder containing plugin.json
+                source_dir = plugin_json_path.parent
                 import shutil
-                for item in temp_path.iterdir():
-                    if item.name != "plugin.zip":
-                        if item.is_dir():
-                            shutil.copytree(item, plugin_dir / item.name)
-                        else:
-                            shutil.copy2(item, plugin_dir)
+                for item in source_dir.iterdir():
+                    if item.is_dir():
+                        shutil.copytree(item, plugin_dir / item.name)
+                    else:
+                        shutil.copy2(item, plugin_dir)
                 
                 # Save plugin to database
                 plugin_data = {
