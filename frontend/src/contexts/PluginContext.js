@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { mockPlugins } from '../data/mock';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const PluginContext = createContext();
 
@@ -15,85 +18,131 @@ export const PluginProvider = ({ children }) => {
   const [plugins, setPlugins] = useState([]);
   const [activePlugins, setActivePlugins] = useState([]);
   const [pluginHooks, setPluginHooks] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Load plugins and active state from storage
-    setPlugins(mockPlugins);
-    const storedActivePlugins = localStorage.getItem('cms_active_plugins');
-    if (storedActivePlugins) {
-      setActivePlugins(JSON.parse(storedActivePlugins));
-    }
+    loadPlugins();
+    loadActivePlugins();
+    loadPluginHooks();
   }, []);
 
-  const activatePlugin = (pluginId) => {
-    if (!activePlugins.includes(pluginId)) {
-      const newActivePlugins = [...activePlugins, pluginId];
-      setActivePlugins(newActivePlugins);
-      localStorage.setItem('cms_active_plugins', JSON.stringify(newActivePlugins));
-      
-      // Execute plugin activation hook
-      const plugin = plugins.find(p => p.id === pluginId);
-      if (plugin && plugin.hooks) {
-        registerPluginHooks(pluginId, plugin.hooks);
-      }
+  const loadPlugins = async () => {
+    try {
+      const response = await axios.get(`${API}/plugins`);
+      setPlugins(response.data);
+    } catch (error) {
+      console.error('Error loading plugins:', error);
     }
   };
 
-  const deactivatePlugin = (pluginId) => {
-    const newActivePlugins = activePlugins.filter(id => id !== pluginId);
-    setActivePlugins(newActivePlugins);
-    localStorage.setItem('cms_active_plugins', JSON.stringify(newActivePlugins));
-    
-    // Remove plugin hooks
-    setPluginHooks(prev => {
-      const newHooks = { ...prev };
-      Object.keys(newHooks).forEach(hookName => {
-        newHooks[hookName] = newHooks[hookName].filter(hook => hook.pluginId !== pluginId);
-      });
-      return newHooks;
-    });
+  const loadActivePlugins = async () => {
+    try {
+      const response = await axios.get(`${API}/plugins/active`);
+      setActivePlugins(response.data.map(p => p.id));
+    } catch (error) {
+      console.error('Error loading active plugins:', error);
+    }
   };
 
-  const registerPluginHooks = (pluginId, hooks) => {
-    setPluginHooks(prev => {
-      const newHooks = { ...prev };
-      Object.entries(hooks).forEach(([hookName, hookFunction]) => {
-        if (!newHooks[hookName]) {
-          newHooks[hookName] = [];
-        }
-        newHooks[hookName].push({
-          pluginId,
-          execute: hookFunction
-        });
-      });
-      return newHooks;
-    });
+  const loadPluginHooks = async () => {
+    try {
+      const response = await axios.get(`${API}/plugins/hooks`);
+      setPluginHooks(response.data);
+    } catch (error) {
+      console.error('Error loading plugin hooks:', error);
+    }
   };
 
-  const executeHook = (hookName, data = {}) => {
-    const hooks = pluginHooks[hookName] || [];
-    let result = data;
-    
-    hooks.forEach(hook => {
-      try {
-        const hookResult = hook.execute(result);
-        if (hookResult !== undefined) {
-          result = hookResult;
-        }
-      } catch (error) {
-        console.error(`Error executing hook ${hookName} from plugin ${hook.pluginId}:`, error);
-      }
-    });
-    
-    return result;
+  const activatePlugin = async (pluginId) => {
+    try {
+      setIsLoading(true);
+      await axios.put(`${API}/plugins/${pluginId}/activate`);
+      
+      // Update local state
+      setActivePlugins(prev => [...prev, pluginId]);
+      
+      // Update plugin status in plugins list
+      setPlugins(prev => prev.map(p => 
+        p.id === pluginId ? { ...p, status: 'active' } : p
+      ));
+      
+      // Reload hooks
+      await loadPluginHooks();
+      
+      return true;
+    } catch (error) {
+      console.error('Error activating plugin:', error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deactivatePlugin = async (pluginId) => {
+    try {
+      setIsLoading(true);
+      await axios.put(`${API}/plugins/${pluginId}/deactivate`);
+      
+      // Update local state
+      setActivePlugins(prev => prev.filter(id => id !== pluginId));
+      
+      // Update plugin status in plugins list
+      setPlugins(prev => prev.map(p => 
+        p.id === pluginId ? { ...p, status: 'installed' } : p
+      ));
+      
+      // Reload hooks
+      await loadPluginHooks();
+      
+      return true;
+    } catch (error) {
+      console.error('Error deactivating plugin:', error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const executeHook = async (hookName, data = {}) => {
+    try {
+      const response = await axios.post(`${API}/plugins/execute-hook`, {
+        hook_name: hookName,
+        data: data
+      });
+      
+      return response.data.data || data;
+    } catch (error) {
+      console.error('Error executing hook:', error);
+      return data;
+    }
   };
 
   const isPluginActive = (pluginId) => {
     return activePlugins.includes(pluginId);
   };
 
-  const installPlugin = (plugin) => {
-    setPlugins(prev => [...prev, plugin]);
+  const installPlugin = async (pluginFile) => {
+    try {
+      setIsLoading(true);
+      const formData = new FormData();
+      formData.append('plugin_file', pluginFile);
+      
+      await axios.post(`${API}/plugins/install`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      // Reload plugins
+      await loadPlugins();
+      
+      return true;
+    } catch (error) {
+      console.error('Error installing plugin:', error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const value = {
@@ -104,7 +153,8 @@ export const PluginProvider = ({ children }) => {
     isPluginActive,
     installPlugin,
     executeHook,
-    registerPluginHooks
+    isLoading,
+    loadPlugins
   };
 
   return (
