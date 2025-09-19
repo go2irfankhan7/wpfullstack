@@ -63,6 +63,65 @@ const Plugins = () => {
     }
   };
 
+  const handleUploadPlugin = () => {
+    setIsUploadModalOpen(true);
+  };
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.type === 'application/zip' || file.name.endsWith('.zip')) {
+        setUploadFile(file);
+      } else {
+        toast({
+          title: "Invalid File Type",
+          description: "Please select a ZIP file containing your plugin",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  const handleInstallPlugin = async () => {
+    if (!uploadFile) {
+      toast({
+        title: "No File Selected",
+        description: "Please select a plugin ZIP file to upload",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const success = await installPlugin(uploadFile);
+      
+      if (success) {
+        toast({
+          title: "Plugin Installed Successfully!",
+          description: `${uploadFile.name} has been installed. You can now activate it.`
+        });
+        setIsUploadModalOpen(false);
+        setUploadFile(null);
+      } else {
+        toast({
+          title: "Installation Failed",
+          description: "Failed to install the plugin. Please check the file and try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Plugin installation error:', error);
+      toast({
+        title: "Installation Error",
+        description: error.message || "An error occurred during plugin installation",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
