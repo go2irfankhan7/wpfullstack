@@ -110,6 +110,11 @@ const Posts = () => {
     setIsEditModalOpen(true);
   };
 
+  const handleViewPost = (post) => {
+    setViewPost(post);
+    setIsViewModalOpen(true);
+  };
+
   const handleSavePost = async () => {
     try {
       if (!formData.title.trim() || !formData.content.trim()) {
