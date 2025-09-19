@@ -23,6 +23,7 @@ const API = `${BACKEND_URL}/api`;
 const Dashboard = () => {
   const { user } = useAuth();
   const { plugins, activePlugins, executeHook } = usePlugins();
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [recentActivity, setRecentActivity] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
