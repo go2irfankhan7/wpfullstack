@@ -127,11 +127,13 @@ export const PluginProvider = ({ children }) => {
       const formData = new FormData();
       formData.append('plugin_file', pluginFile);
       
-      await axios.post(`${API}/plugins/install`, formData, {
+      const response = await axios.post(`${API}/plugins/install`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
+      
+      console.log('Plugin installation response:', response.data);
       
       // Reload plugins
       await loadPlugins();
@@ -139,7 +141,17 @@ export const PluginProvider = ({ children }) => {
       return true;
     } catch (error) {
       console.error('Error installing plugin:', error);
-      return false;
+      
+      // Check if it's a specific error response
+      if (error.response?.data?.detail) {
+        throw new Error(error.response.data.detail);
+      } else if (error.response?.status === 403) {
+        throw new Error('Admin access required to install plugins');
+      } else if (error.response?.status === 400) {
+        throw new Error('Invalid plugin file format or structure');
+      } else {
+        throw new Error('Failed to install plugin. Please check your connection and try again.');
+      }
     } finally {
       setIsLoading(false);
     }
