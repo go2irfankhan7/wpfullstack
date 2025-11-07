@@ -1,0 +1,82 @@
+{
+  "name": "Social Media Share & Like",
+  "version": "1.0.0",
+  "description": "Add beautiful social media share buttons and like functionality to your posts. Supports Facebook, Twitter, LinkedIn, WhatsApp, and more with customizable styling.",
+  "author": "CMS Pro Team",
+  "category": "Social",
+  "price": "Free",
+  "features": [
+    "Social media share buttons",
+    "Internal like system",
+    "Share count tracking",
+    "Customizable button styles",
+    "Mobile-responsive design",
+    "Multiple social platforms",
+    "Analytics integration",
+    "Custom positioning"
+  ],
+  "dependencies": [],
+  "hooks": {
+    "post_content": {
+      "type": "frontend",
+      "description": "Add social share buttons to post content"
+    },
+    "admin_menu": {
+      "type": "frontend", 
+      "description": "Add Social Share settings to admin menu"
+    },
+    "post_meta": {
+      "type": "both",
+      "description": "Track post likes and shares"
+    },
+    "social_analytics": {
+      "type": "backend",
+      "description": "Track social media engagement"
+    }
+  },
+  "settings_schema": {
+    "enabled_platforms": {
+      "type": "multiselect",
+      "options": ["facebook", "twitter", "linkedin", "whatsapp", "telegram", "reddit", "pinterest"],
+      "default": ["facebook", "twitter", "linkedin", "whatsapp"],
+      "label": "Enabled Social Platforms"
+    },
+    "button_style": {
+      "type": "select",
+      "options": ["rounded", "square", "circular"],
+      "default": "rounded",
+      "label": "Button Style"
+    },
+    "button_size": {
+      "type": "select",
+      "options": ["small", "medium", "large"],
+      "default": "medium", 
+      "label": "Button Size"
+    },
+    "position": {
+      "type": "select",
+      "options": ["top", "bottom", "both", "floating"],
+      "default": "bottom",
+      "label": "Button Position"
+    },
+    "show_share_count": {
+      "type": "boolean",
+      "default": true,
+      "label": "Show Share Count"
+    },
+    "show_like_button": {
+      "type": "boolean", 
+      "default": true,
+      "label": "Enable Like Button"
+    },
+    "custom_message": {
+      "type": "string",
+      "default": "Check out this awesome post!",
+      "label": "Default Share Message"
+    }
+  },
+  "icon": "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=100&h=100&fit=crop",
+  "screenshots": [
+    "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=600&h=400&fit=crop"
+  ]
+}

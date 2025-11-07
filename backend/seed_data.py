@@ -26,7 +26,7 @@ async def seed_users():
             "_id": "admin-user-001",
             "name": "Admin User",
             "email": "admin@cms.com",
-            "password_hash": get_password_hash("admin123"),
+            "password_hash": get_password_hash("SecureAdmin2024!"),
             "role": UserRole.ADMIN,
             "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=admin",
             "is_active": True
@@ -35,7 +35,7 @@ async def seed_users():
             "_id": "editor-user-001",
             "name": "Editor User",
             "email": "editor@cms.com",
-            "password_hash": get_password_hash("editor123"),
+            "password_hash": get_password_hash("EditorSecure2024!"),
             "role": UserRole.EDITOR,
             "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=editor",
             "is_active": True
@@ -44,7 +44,7 @@ async def seed_users():
             "_id": "author-user-001",
             "name": "Author User",
             "email": "author@cms.com",
-            "password_hash": get_password_hash("author123"),
+            "password_hash": get_password_hash("AuthorSecure2024!"),
             "role": UserRole.AUTHOR,
             "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=author",
             "is_active": True
